@@ -9,10 +9,15 @@
         "directory": ".open-next/assets",
         "binding": "ASSETS"
     },
+    "vars": {
+        "ADMIN_USERS": "NAZA",
+        "NEXT_PUBLIC_APP_URL": "https://ldc-shop.vnvnv.com"
+    },
     "d1_databases": [
         {
             "binding": "DB",
-            "database_name": "ldc-shop-next"
+            "database_name": "ldc-shop-next",
+            "database_id": "e81821aa-924f-4fc5-b8ff-c9b8d316ac82"
         }
     ],
     "observability": {
