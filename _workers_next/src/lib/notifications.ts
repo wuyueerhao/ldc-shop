@@ -22,6 +22,32 @@ async function getSettingsUncached(keys: string[]): Promise<Record<string, strin
     }
 }
 
+function getAppBaseUrl() {
+    const raw = process.env.NEXT_PUBLIC_APP_URL
+        || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "")
+    if (!raw) return ""
+    try {
+        return new URL(raw).origin
+    } catch {
+        return ""
+    }
+}
+
+function toAbsoluteUrl(input: string, baseUrl: string) {
+    const raw = (input || "").trim()
+    if (!raw) return ""
+    try {
+        return new URL(raw).toString()
+    } catch {
+        if (!baseUrl) return ""
+        try {
+            return new URL(raw, baseUrl).toString()
+        } catch {
+            return ""
+        }
+    }
+}
+
 export async function getNotificationSettings() {
     const values = await getSettingsUncached([
         'telegram_bot_token',
@@ -31,6 +57,8 @@ export async function getNotificationSettings() {
         'bark_enabled',
         'bark_server_url',
         'bark_device_key',
+        'shop_logo',
+        'shop_logo_updated_at',
     ])
 
     const token = (values.telegram_bot_token || '').trim()
@@ -44,6 +72,12 @@ export async function getNotificationSettings() {
     const barkEnabled = values.bark_enabled === 'true'
     const barkServerUrl = (values.bark_server_url || 'https://api.day.app').trim() || 'https://api.day.app'
     const barkDeviceKey = (values.bark_device_key || '').trim()
+    const appBaseUrl = getAppBaseUrl()
+    const shopLogo = (values.shop_logo || "").trim()
+    const shopLogoUpdatedAt = (values.shop_logo_updated_at || "").trim()
+    const barkIconUrl = shopLogo
+        ? toAbsoluteUrl(shopLogo, appBaseUrl)
+        : (appBaseUrl ? `${appBaseUrl}/favicon${shopLogoUpdatedAt ? `?v=${encodeURIComponent(shopLogoUpdatedAt)}` : ""}` : "")
 
     return {
         token,
@@ -52,7 +86,8 @@ export async function getNotificationSettings() {
         telegramEnabled,
         barkEnabled,
         barkServerUrl,
-        barkDeviceKey
+        barkDeviceKey,
+        barkIconUrl,
     }
 }
 
@@ -112,7 +147,7 @@ export async function sendBarkMessage(
     options?: { url?: string; group?: string }
 ) {
     try {
-        const { barkEnabled, barkServerUrl, barkDeviceKey } = await getNotificationSettings()
+        const { barkEnabled, barkServerUrl, barkDeviceKey, barkIconUrl } = await getNotificationSettings()
 
         if (!barkEnabled) {
             console.log('[Notification] Bark skipped: disabled')
@@ -132,6 +167,7 @@ export async function sendBarkMessage(
         const query = new URLSearchParams()
         if (options?.url) query.set('url', options.url)
         if (options?.group) query.set('group', options.group)
+        if (barkIconUrl) query.set('icon', barkIconUrl)
         const queryString = query.toString()
         if (queryString) {
             requestUrl += `?${queryString}`
