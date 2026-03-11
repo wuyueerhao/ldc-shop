@@ -351,8 +351,9 @@ export function OrderContent({ order, canViewKey, isOwner, refundRequest }: Orde
                     {isOwner && (order.status === 'paid' || order.status === 'delivered') && (
                         <>
                             <Separator className="bg-border/50" />
-                            {refundRequest?.status ? (
+                            {refundRequest?.status && (
                                 <div className="space-y-1">
+                                    <h3 className="font-semibold">{t('refund.requestTitle')}</h3>
                                     <div className="text-sm text-muted-foreground">
                                         {t('refund.requestStatus', { status: t(`refund.statusValues.${refundRequest.status}`) })}
                                     </div>
@@ -362,31 +363,30 @@ export function OrderContent({ order, canViewKey, isOwner, refundRequest }: Orde
                                         </div>
                                     )}
                                 </div>
-                            ) : (
-                                <div className="flex gap-3">
-                                    {order.productId && !isPayment && (
-                                        <Button
-                                            variant="outline"
-                                            className="flex-1"
-                                            onClick={() => {
-                                                window.location.href = `/buy/${order.productId}#reviews`
-                                            }}
-                                        >
-                                            {t('order.goReview')}
-                                        </Button>
-                                    )}
-                                    {Number(order.amount) > 0 && (
-                                        <Button
-                                            variant="destructive"
-                                            className={order.productId && !isPayment ? "flex-1" : "w-full"}
-                                            onClick={() => setConfirmOpen(true)}
-                                            disabled={submitting}
-                                        >
-                                            {t('refund.requestTitle')}
-                                        </Button>
-                                    )}
-                                </div>
                             )}
+                            <div className="flex gap-3">
+                                {order.productId && !isPayment && (
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1"
+                                        onClick={() => {
+                                            window.location.href = `/buy/${order.productId}#reviews`
+                                        }}
+                                    >
+                                        {t('order.goReview')}
+                                    </Button>
+                                )}
+                                {Number(order.amount) > 0 && !refundRequest?.status && (
+                                    <Button
+                                        variant="destructive"
+                                        className={order.productId && !isPayment ? "flex-1" : "w-full"}
+                                        onClick={() => setConfirmOpen(true)}
+                                        disabled={submitting}
+                                    >
+                                        {t('refund.requestTitle')}
+                                    </Button>
+                                )}
+                            </div>
                         </>
                     )}
                 </CardContent>

@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { orders, reviews } from "@/lib/db/schema"
+import { orders, reviews, products } from "@/lib/db/schema"
 import { eq, desc, inArray } from "drizzle-orm"
 import { redirect } from "next/navigation"
 import { OrdersContent } from "@/components/orders-content"
@@ -37,6 +37,20 @@ export default async function OrdersPage() {
     const productIds = Array.from(new Set(userOrders.map((o: any) => o.productId).filter(Boolean)))
     const productVariantLabels = productIds.length > 0 ? await getProductVariantLabels(productIds) : {}
 
+    let productImages: Record<string, string | null> = {}
+    if (productIds.length > 0) {
+        try {
+            const rows = await db.select({ id: products.id, image: products.image })
+                .from(products)
+                .where(inArray(products.id, productIds))
+            for (const row of rows) {
+                if (row.image) productImages[row.id] = row.image
+            }
+        } catch {
+            productImages = {}
+        }
+    }
+
     return (
         <OrdersContent
             orders={userOrders.map((o: any) => ({
@@ -49,6 +63,7 @@ export default async function OrdersPage() {
                 canReview: o.status === 'delivered' && !reviewedOrderIds.includes(o.orderId)
             }))}
             productVariantLabels={productVariantLabels}
+            productImages={productImages}
         />
     )
 }

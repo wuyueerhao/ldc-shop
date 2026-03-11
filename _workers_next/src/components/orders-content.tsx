@@ -21,7 +21,7 @@ interface Order {
     canReview?: boolean
 }
 
-export function OrdersContent({ orders, productVariantLabels = {} }: { orders: Order[]; productVariantLabels?: Record<string, string | null> }) {
+export function OrdersContent({ orders, productVariantLabels = {}, productImages = {} }: { orders: Order[]; productVariantLabels?: Record<string, string | null>; productImages?: Record<string, string | null> }) {
     const { t } = useI18n()
     const [query, setQuery] = useState("")
     const [status, setStatus] = useState<string>("all")
@@ -106,8 +106,14 @@ export function OrdersContent({ orders, productVariantLabels = {} }: { orders: O
                         <Card key={order.orderId} className="hover:border-primary/50 transition-colors">
                             <Link href={`/order/${order.orderId}`}>
                                 <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
-                                    <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center shrink-0">
-                                        {isPaymentOrder(order.productId) ? (
+                                    <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                                        {!isPaymentOrder(order.productId) && order.productId && productImages[order.productId] ? (
+                                            <img
+                                                src={productImages[order.productId]!}
+                                                alt=""
+                                                className="h-full w-full object-cover"
+                                            />
+                                        ) : isPaymentOrder(order.productId) ? (
                                             <CreditCard className="h-6 w-6 text-muted-foreground" />
                                         ) : (
                                             <Package className="h-6 w-6 text-muted-foreground" />
