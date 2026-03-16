@@ -11,6 +11,7 @@ import { isAdminUsername } from "@/lib/admin-auth"
 import { getProductCardApiConfig, pullOneCardFromApi, saveProductCardApiConfig } from "@/lib/card-api"
 import { unstable_noStore } from "next/cache"
 import { isThemeFont } from "@/lib/theme-fonts"
+import { normalizeCurrencyUnit } from "@/lib/currency-unit"
 import {
     PRODUCT_GALLERY_MAX_ITEMS,
     PRODUCT_GALLERY_MAX_JSON_LENGTH,
@@ -701,6 +702,21 @@ export async function saveShopFooter(footer: string) {
     }
 
     await setSetting('shop_footer', text)
+    revalidatePath('/admin/settings')
+    revalidatePath('/')
+    updateTag('home:products')
+    updateTag('home:product-categories')
+}
+
+export async function saveCurrencyUnit(rawCurrencyUnit: string) {
+    await checkAdmin()
+
+    const currencyUnit = normalizeCurrencyUnit(rawCurrencyUnit) || ''
+    if (currencyUnit.length > 20) {
+        throw new Error("Currency unit is too long")
+    }
+
+    await setSetting('currency_unit', currencyUnit)
     revalidatePath('/admin/settings')
     revalidatePath('/')
     updateTag('home:products')
